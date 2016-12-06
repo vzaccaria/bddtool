@@ -19,7 +19,10 @@ executable bddtool
   default-language:    Haskell2010
   build-depends:       base >= 4.7 && < 5,
                        containers,
+                       directory >= 1.2.6.2,
                        fgl,
                        graphviz,
+                       mtl >= 2.2.1,
+                       process >= 1.4.2.0,
                        text
 

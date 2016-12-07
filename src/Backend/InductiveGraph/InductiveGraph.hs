@@ -2,11 +2,11 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 
-module Backend.InductiveGraph where
+module Backend.InductiveGraph.InductiveGraph where
 
 import           Data.Graph.Inductive
-import Data.List
-import Data.Maybe
+import Data.List (foldl)
+import Data.Maybe()
 import Data.Bool (Bool(..))
 import qualified Data.GraphViz                as DG
 import qualified Data.GraphViz.Printing       as DGP
@@ -14,7 +14,10 @@ import           Data.Text.Lazy                    (unpack)
 import Language.Operators
 import Utils.Plot (plotDot)
 import Control.Monad.State.Lazy hiding (lift)
-import Control.Monad (unless, void)
+import Debug.Trace
+
+xor :: Bool -> Bool -> Bool
+xor a b = not a && b || a && not b
 
 -- Ideally, this should be done in fgl
 -- data ITE = ITE String ITE ITE | TERM [Bool]
@@ -36,7 +39,7 @@ instance Symantics E where
   x .| y  = E  (unE x `EOR` unE y)
   f .<> e = E  (unE f `EMELD` unE e)
 
-partialEval :: (Maybe (String, Exp)) -> Exp -> Exp
+partialEval :: Maybe (String, Exp) -> Exp -> Exp
 partialEval Nothing e                  = e
 partialEval _ ETRUE                    = ETRUE
 partialEval _ EFALSE                   = EFALSE
@@ -48,17 +51,21 @@ partialEval c (ENEG e1)                = ENEG (partialEval c e1)
 partialEval c (EMELD e1 e2)            = EMELD (partialEval c e1) (partialEval c e2)
 
 eval :: Exp -> [Bool]
-eval (EVAR s)     = error ("Sorry, " ++ show s ++ " cant be fully evaluated")
-eval ETRUE        = [True]
-eval EFALSE       = [False]
-eval (EAND e1 e2) = [(head (eval e1)) && (head (eval e2))]
-eval (EOR e1 e2)  = [(head (eval e1)) || (head (eval e2))]
+eval (EVAR s)      = error ("Sorry, " ++ show s ++ " cant be fully evaluated")
+eval ETRUE         = [True]
+eval EFALSE        = [False]
+eval (EAND e1 e2)  = [head (eval e1) && head (eval e2)]
+eval (EOR e1 e2)   = [head (eval e1) || head (eval e2)]
+eval (EXOR e1 e2)  = [head (eval e1) `xor` head (eval e2)]
+eval (ENEG e1)     = [not $ head $ eval e1 ]
+eval (EMELD e1 e2) = eval e1 ++ eval e2
 
-x = var "x"
-y = var "y"
-z = var "z"
+cofactors :: String -> Exp -> (Exp, Exp)
+cofactors v e = let
+  e0 = partialEval (Just (v, ETRUE)) e
+  e1 = partialEval (Just (v, EFALSE)) e
+  in (e0, e1)
 
-v1 = unE $ neg x .+ y .& z .<> var "x" .<> ((neg x .+ y .+ z) .& x)
 
 data InternalFun = ITE String InternalFun InternalFun | TERM [Bool] deriving (Eq,Show)
 type NodeLabel = String
@@ -67,30 +74,48 @@ type EdgeLabel = ()
 type BDD = Gr NodeLabel EdgeLabel
 type BDDState a =  State BDD a
 
-getFreshNumber _ = 1
+getFreshNumber :: Graph gr => gr a b -> Int
+getFreshNumber = noNodes 
+
+mkConst :: [Bool] -> BDDState Node
+mkConst bv = do {
+  b <- get;
+  case findConstNode b bv of
+    Nothing ->
+      let 
+        newNode = getFreshNumber b
+        ctx = ([], newNode, show bv, [])
+        newbdd = ctx & b
+      in
+        put newbdd >> return newNode
+    Just n ->
+        return n;
+}
 
 mk :: String -> Node -> Node -> BDDState Node
 mk l v0 v1 = do {
   b <- get;
-  case duplicateExists b l v0 v1 of
-    Nothing -> 
-      let
-        newNode    = getFreshNumber b
-        thNode     = ((), v0)
-        elNode     = ((), v1)
-        targetArcs = [thNode, elNode]
-        sourceArcs = []
-        ctx        = (sourceArcs, newNode, l, targetArcs)
-        newbdd = ctx & b
-      in
-        put newbdd >> return newNode
-    Just n -> return n;
+  if v0 == v1 then
+    return v0
+    else 
+      case duplicateExists b l v0 v1 of
+        Nothing -> 
+          let
+            newNode    = getFreshNumber b
+            thNode     = ((), v0)
+            elNode     = ((), v1)
+            targetArcs = [thNode, elNode]
+            sourceArcs = []
+            ctx        = (sourceArcs, newNode, l, targetArcs)
+            newbdd = (ctx & b)
+            msg = "constructing new bdd with context " ++ (show ctx) ++ " - final bdd is: " ++ (show newbdd) ++ " context of node 2 is "  ++ (show $ context newbdd 2)
+          in
+            trace msg $ put newbdd >> return newNode
+        Just n -> return n;
 }
 
-evalExpression = undefined
-
 build :: [String] -> Exp -> BDDState Node
-build _ e = evalExpression e -- should return the nodes associated with constants
+build [] e = mkConst $ eval e -- should return the nodes associated with constants
 build (x:xs) e =
   let
     (e0, e1) = cofactors x e
@@ -105,15 +130,26 @@ buildBDD :: [String] -> Exp -> BDD
 buildBDD vars e =
   execState (build vars e) (mkGraph [] [])
 
-cofactors = undefined
+
+findConstNode :: BDD -> [Bool] -> Maybe Node
+findConstNode b bv =
+  let getIt :: Context NodeLabel EdgeLabel -> Maybe Node -> Maybe Node
+      getIt _ a@(Just _) = a
+      getIt c Nothing =
+        if lab' c == show bv then
+          Just (node' c)
+        else
+          Nothing
+  in
+      ufold getIt Nothing b
 
 duplicateExists :: BDD -> String -> Node -> Node -> Maybe Node
 duplicateExists b l t e =
   let
-    getIt :: Context NodeLabel EdgeLabel -> Maybe Node -> Maybe Node
-    getIt _ a@(Just _) = a
-    getIt c Nothing =
+    getIt a@(Just _) _ = a
+    getIt Nothing n =
           let
+            c = context b n
             ctxHasLabel = (lab' c == l)
             ctxHasTNode = head (suc' c) == t
             ctxHasENode = (suc' c !! 1) == e
@@ -124,11 +160,14 @@ duplicateExists b l t e =
             else
               Nothing
   in
-    ufold getIt Nothing b
+    foldl getIt Nothing (nodes b)
 
 
 
 
 
+pdot :: Graph gr => gr l el -> String
 pdot d = unpack . DGP.renderDot . DGP.toDot . DG.graphToDot DG.nonClusteredParams $ d
-pdotFinal n x =  plotDot n  $ pdot x
+
+pdotToFile:: Graph gr => String -> gr l el -> IO ()
+pdotToFile n x =  plotDot n  $ pdot x

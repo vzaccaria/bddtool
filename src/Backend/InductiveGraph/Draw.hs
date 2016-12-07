@@ -11,9 +11,11 @@ import           Data.Text.Lazy                        (unpack)
 import           Utils.Plot                            (plotDot)
 
 myParameters
-  :: GraphvizParams Int String () () String
-myParameters = nonClusteredParams {fmtNode = fn}
+  :: GraphvizParams Int String Bool () String
+myParameters = nonClusteredParams {fmtNode = fn, fmtEdge = fe }
   where fn (_,l) = [toLabel l]
+        fe (_,_,True) = []
+        fe (_,_,False) = [styles [dashed]]
 
 defaultVis :: BDD -> DotGraph Node
 defaultVis = graphToDot myParameters

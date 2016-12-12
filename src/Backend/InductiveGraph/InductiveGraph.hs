@@ -94,7 +94,7 @@ data InternalFun
 
 type NodeLabel = String
 
-type EdgeLabel = ()
+type EdgeLabel = Bool
 
 type BDD = Gr NodeLabel EdgeLabel
 
@@ -104,13 +104,16 @@ getFreshNumber :: Graph gr
                => gr a b -> Int
 getFreshNumber = noNodes
 
+sbv :: [Bool] -> String
+sbv = concatMap (\x -> if x then "1" else "0")
+
 mkConst :: [Bool] -> BDDState Node
 mkConst bv =
   do b <- get
      case findConstNode b bv of
        Nothing ->
          let newNode = getFreshNumber b
-             ctx = ([],newNode,show bv,[])
+             ctx = ([],newNode, sbv bv,[])
              newbdd = ctx & b
          in put newbdd >> return newNode
        Just n -> return n
@@ -123,8 +126,8 @@ mk l v0 v1 =
         else case duplicateExists b l v0 v1 of
                Nothing ->
                  let newNode = getFreshNumber b
-                     thNode = ((),v0)
-                     elNode = ((),v1)
+                     thNode = (True,v0)
+                     elNode = (False,v1)
                      targetArcs = [thNode,elNode]
                      sourceArcs = []
                      ctx = (sourceArcs,newNode,l,targetArcs)
@@ -151,7 +154,7 @@ findConstNode b bv =
         :: Context NodeLabel EdgeLabel -> Maybe Node -> Maybe Node
       getIt _ a@(Just _) = a
       getIt c Nothing =
-        if lab' c == show bv
+        if lab' c == sbv bv
            then Just (node' c)
            else Nothing
   in ufold getIt Nothing b

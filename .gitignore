@@ -1,2 +1,3 @@
 .bdd
-final.pdf
+final*.pdf
+.tikzgraph

@@ -24,5 +24,6 @@ executable bddtool
                        graphviz,
                        mtl >= 2.2.1,
                        process >= 1.4.2.0,
+                       interpolate, 
                        text
 

@@ -22,18 +22,38 @@ epilogue pfx = [i|};
 \\end{tikzpicture}
 |]
 
+
+rpos n (dx,dy) = [i|($(#{show n})+(#{dx},#{dy})$)|]
+
+drawNodeRelativeTo :: Node -> (Float, Float) -> String -> String
+drawNodeRelativeTo n d expl = [i| \\node [draw=none] at #{rpos n d} {#{expl}};|]
+
+drawBarRelativeTo n d ix v =
+  let
+    dim = 0.2
+    (dx, dy) = d
+    p = (dx + ix * dim, dy)
+  in
+    [i| \\node [rectangle, inner sep=0pt, draw=none, fill=gray!30, minimum width=#{show dim}cm, minimum height=1cm , anchor=south] at #{rpos n p} {};|] ++
+    [i| \\node [rectangle, inner sep=0pt, draw=none, fill=black, minimum size=0cm, minimum width=#{show dim}cm, minimum height=#{show v}cm, anchor=south] at #{rpos n p} {};|] 
+
+
+findRootNode :: BDD -> Node
+findRootNode b = let
+    nds = nodes b
+    rts = filter (\n -> (length (inn b n) == 0)) nds
+  in
+    head rts
+
 drawNodes :: BDD -> String -> String
 drawNodes b expl = let
 
-  pfx = [i| \\node [draw=none] at ($(#{show $ findRootNode b})+(0,1)$) {#{expl}};|]
+  pfx =
+    drawNodeRelativeTo (findRootNode b) (0,1) expl ++
+    drawBarRelativeTo (findRootNode b) (1,-0.5) 0 0.0 ++
+    drawBarRelativeTo (findRootNode b) (1,-0.5) 1 0.7 ++
+    drawBarRelativeTo (findRootNode b) (1,-0.5) 2 0.3 
 
-  findRootNode :: BDD -> Int
-  findRootNode b = let
-    nds = nodes b
-    rts = filter (\n -> (length (inn b n) == 0)) nds
-    in
-      head rts
-  
   accumulateOnContext :: Context NodeLabel EdgeLabel -> String -> String
   accumulateOnContext c a = let
 

@@ -1,6 +1,6 @@
 name:                bddtool
 version:             0.1.0.0
-synopsis:            Simple project template from stack
+synopsis:           Simple project template from stack
 description:         Please see README.md
 homepage:            https://github.com/githubuser/bddtool#readme
 license:             BSD3

@@ -23,6 +23,7 @@ tikzPrologue = [i|
 \\usetikzlibrary{mindmap}
 \\usetikzlibrary{positioning}
 \\usetikzlibrary{snakes}
+\\usetikzlibrary{arrows}
 \\usetikzlibrary{arrows.meta}
 \\usetikzlibrary{shadows}
 \\usetikzlibrary{calc}

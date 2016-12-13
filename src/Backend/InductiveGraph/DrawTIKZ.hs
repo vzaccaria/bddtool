@@ -14,7 +14,7 @@ import           Utils.Plot                            (plotDot, plotTikz)
 
 prologue = [i|
 \\begin{tikzpicture}[>=latex, every node/.style={circle, draw, minimum size=0.75cm}]
-\\graph [tree layout, level distance=0.5in, sibling distance=0.5in  ] {
+\\graph [layered layout, level distance=0.5in, sibling distance=0.5in  ] {
 |]
 
 epilogue pfx = [i|};

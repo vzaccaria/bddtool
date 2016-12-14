@@ -38,4 +38,8 @@ f "x" = 0.5
 f "y" = 0.5
 f "z" = 0.5
 
-exdraw e = drawPdfInfoSheet e ["x", "y", "z"] (Just f) "prova.pdf"  
+exdraw e = drawPdfInfoSheet e ["x", "y", "z"] (Just f) "prova.pdf"
+
+drawp e = drawPdfInfoSheet e ["x", "y", "z"] (Just f)
+drawnp e = drawPdfInfoSheet e ["x", "y", "z"] Nothing
+

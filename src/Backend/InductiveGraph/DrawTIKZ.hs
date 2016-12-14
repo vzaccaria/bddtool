@@ -15,7 +15,7 @@ import           Text.Printf
 import           Utils.Plot                            (plotDot, plotTikz)
 
 prologue = [i|
-\\begin{tikzpicture}[>=latex, every node/.style={circle, draw, minimum size=0.75cm}]
+\\begin{tikzpicture}[>=latex, every node/.style={circle, draw, minimum size=0.55cm}]
 \\graph [layered layout, level distance=0.5in, sibling distance=0.5in  ] {
 |]
 
@@ -94,7 +94,7 @@ drawNodes mf b expl = let
       slab = "$" ++ lab'' b s ++ "$"
       tlab = "$" ++ lab'' b t ++ "$"
       arrstyle = if v then "" else "dashed"
-      in [i|#{s}[root=#{isroot},as={#{slab}}] ->[#{arrstyle}] #{t}[as=#{tlab}]; \n|]
+      in [i|#{s}[root=#{isroot},as={#{slab}},scale=0.5] ->[#{arrstyle}] #{t}[as=#{tlab},scale=0.5]; \n|]
 
     arrows = concatMap arrow edgeso
     in

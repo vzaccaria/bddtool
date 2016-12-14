@@ -28,15 +28,32 @@ rpos n (dx,dy) = [i|($(#{show n})+(#{dx},#{dy})$)|]
 drawNodeRelativeTo :: Node -> (Float, Float) -> String -> String
 drawNodeRelativeTo n d expl = [i| \\node [draw=none] at #{rpos n d} {#{expl}};|]
 
-drawBarRelativeTo n d ix v =
+
+drawBarRelativeTo :: Node -> (Float, Float) -> Float -> Int -> Float -> String
+drawBarRelativeTo n d dim ix v =
   let
-    dim = 0.2
     (dx, dy) = d
-    p = (dx + ix * dim, dy)
+    p = (dx + (toEnum ix) * dim, dy)
   in
     [i| \\node [rectangle, inner sep=0pt, draw=none, fill=gray!30, minimum width=#{show dim}cm, minimum height=1cm , anchor=south] at #{rpos n p} {};|] ++
     [i| \\node [rectangle, inner sep=0pt, draw=none, fill=black, minimum size=0cm, minimum width=#{show dim}cm, minimum height=#{show v}cm, anchor=south] at #{rpos n p} {};|] 
 
+data Dir = Lft | Rght
+
+drawChart :: Node -> Dir -> [Float] -> String
+drawChart n dr vs = 
+  let
+    dim :: Float
+    dim = 0.2
+    lvs :: Float
+    lvs = toEnum $ length vs
+    d = case dr of
+      Rght -> (1, -0.5) :: (Float, Float)
+      Lft -> (-1 - dim * (lvs + 1), -0.5) :: (Float, Float)
+    pairs = zip [1 .. length vs] vs
+    res = concatMap (uncurry (drawBarRelativeTo n d dim)) pairs
+  in
+    res
 
 findRootNode :: BDD -> Node
 findRootNode b = let
@@ -50,9 +67,8 @@ drawNodes b expl = let
 
   pfx =
     drawNodeRelativeTo (findRootNode b) (0,1) expl ++
-    drawBarRelativeTo (findRootNode b) (1,-0.5) 0 0.0 ++
-    drawBarRelativeTo (findRootNode b) (1,-0.5) 1 0.7 ++
-    drawBarRelativeTo (findRootNode b) (1,-0.5) 2 0.3 
+    drawChart (findRootNode b) Rght [ 0.1, 0.3, 0.5, 0.0 ] ++ 
+    drawChart (findRootNode b) Lft [ 0.1, 0.3, 0.5, 0.0 ] 
 
   accumulateOnContext :: Context NodeLabel EdgeLabel -> String -> String
   accumulateOnContext c a = let

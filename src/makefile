@@ -1,4 +1,4 @@
 
 
-prova.pdf: Backend/InductiveGraph/*.hs
-	stack ghc -- ./Backend/InductiveGraph/Example.hs -e "exdraw v1"
+prova.pdf: Backend/InductiveGraph/*.hs makefile
+	stack ghc -- ./Backend/InductiveGraph/Example.hs -e "exdraw (v1)"

@@ -11,10 +11,10 @@ import           Data.Text.Lazy                        (unpack)
 import           Utils.Plot                            (plotDot)
 
 myParameters
-  :: GraphvizParams Int String Bool () String
+  :: GraphvizParams Int NodeLabel Bool () NodeLabel
 myParameters = nonClusteredParams {fmtNode = fn, fmtEdge = fe }
-  where fn (_,l) = [toLabel l]
-        fe (_,_,True) = []
+  where fn (_,l)       = [toLabel (show l)]
+        fe (_,_,True)  = []
         fe (_,_,False) = [styles [dashed]]
 
 defaultVis :: BDD -> DotGraph Node

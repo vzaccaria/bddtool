@@ -1,15 +1,16 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE OverloadedStrings         #-}
+{-# LANGUAGE TypeFamilies              #-}
 
 module Backend.InductiveGraph.InductiveGraph where
 
-import Control.Monad.State.Lazy hiding (lift)
-import Data.Bool (Bool(..))
-import Data.Graph.Inductive
-import Data.List (foldl)
-import Data.Maybe ()
-import Language.Operators
+import           Control.Arrow
+import           Control.Monad.State.Lazy hiding (lift)
+import           Data.Bool                (Bool (..))
+import           Data.Graph.Inductive
+import           Data.List                (foldl)
+import           Data.Maybe               ()
+import           Language.Operators
 
 xor :: Bool -> Bool -> Bool
 xor a b = not a && b || a && not b
@@ -92,7 +93,11 @@ data InternalFun
   | TERM [Bool]
   deriving (Eq,Show)
 
-type NodeLabel = String
+data NodeLabel = Vr String | D [Bool] deriving (Eq)
+
+instance Show NodeLabel where
+  show (Vr s) = s
+  show (D b) = sbv b
 
 type EdgeLabel = Bool
 
@@ -113,12 +118,12 @@ mkConst bv =
      case findConstNode b bv of
        Nothing ->
          let newNode = getFreshNumber b
-             ctx = ([],newNode, sbv bv,[])
+             ctx = ([],newNode, D bv,[])
              newbdd = ctx & b
          in put newbdd >> return newNode
        Just n -> return n
 
-mk :: String -> Node -> Node -> BDDState Node
+mk :: NodeLabel -> Node -> Node -> BDDState Node
 mk l v0 v1 =
   do b <- get
      if v0 == v1
@@ -141,7 +146,7 @@ build (x:xs) e =
   let (e0,e1) = cofactors x e
   in do v0 <- build xs e0
         v1 <- build xs e1
-        mk x v0 v1
+        mk (Vr x) v0 v1
 
 buildBDD :: [String] -> Exp -> BDD
 buildBDD vars e =
@@ -154,13 +159,13 @@ findConstNode b bv =
         :: Context NodeLabel EdgeLabel -> Maybe Node -> Maybe Node
       getIt _ a@(Just _) = a
       getIt c Nothing =
-        if lab' c == sbv bv
+        if lab' c == D bv
            then Just (node' c)
            else Nothing
   in ufold getIt Nothing b
 
 duplicateExists
-  :: BDD -> String -> Node -> Node -> Maybe Node
+  :: BDD -> NodeLabel -> Node -> Node -> Maybe Node
 duplicateExists b l t e =
   let getIt a@(Just _) _ = a
       getIt Nothing n =
@@ -172,3 +177,19 @@ duplicateExists b l t e =
               then Just (node' c)
               else Nothing
   in foldl getIt Nothing (nodes b)
+
+edgeTransform :: (DynGraph gr) => (a -> b -> c) -> gr a b -> gr a c
+edgeTransform f = gmap (\(p,v,l,_)->(map1 (f l) p,v,l,[]))
+  where
+    map1 g = map (first g)
+
+findRootNode :: Graph gr => gr a b -> (Node)
+findRootNode b = let
+    nds = nodes b
+    rts = filter (\n -> (length (inn b n) == 0)) nds
+  in
+    head rts
+
+
+
+

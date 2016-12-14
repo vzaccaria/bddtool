@@ -4,6 +4,7 @@ import           Backend.InductiveGraph.Draw
 import           Backend.InductiveGraph.DrawTIKZ
 import           Backend.InductiveGraph.InductiveGraph
 import           Backend.InductiveGraph.PrintLatex
+import           Backend.InductiveGraph.Probability
 import           Data.Graph.Inductive.Graph
 import           Language.Operators
 import           Utils.Plot
@@ -32,5 +33,9 @@ v1 = neg x .+ y .& z .<> var "x" .<> ((neg x .+ y .+ z) .& x)
 
 main = pe0
 
+f :: String -> Float
+f "x" = 0.5
+f "y" = 0.5
+f "z" = 0.5
 
-exdraw e = drawPdfInfoSheet e ["x", "y", "z"] "prova.pdf"
+exdraw e = drawPdfInfoSheet e ["x", "y", "z"] (Just f) "prova.pdf"  

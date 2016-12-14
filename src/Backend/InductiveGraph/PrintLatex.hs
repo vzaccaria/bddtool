@@ -15,7 +15,7 @@ $#{prettyPrintLatex e}$
 
 prettyPrintLatex :: Exp -> String
 prettyPrintLatex (EVAR s    )  = s
-prettyPrintLatex (EAND e1 e2)  = pwp 8 e1 ++ " \\wedge " ++ pwp 8 e2
+prettyPrintLatex (EAND e1 e2)  = pwp 8 e1 ++ "  " ++ pwp 8 e2
 prettyPrintLatex (EOR  e1 e2)  = pwp 7 e1 ++ " \\vee "   ++ pwp 7 e2
 prettyPrintLatex (EXOR e1 e2)  = pwp 5 e1 ++ " \\oplus " ++ pwp 5 e2
 prettyPrintLatex (ENEG e1)     = "\\neg " ++ pwp 10 e1

@@ -1,4 +1,5 @@
 .bdd
-final*.pdf
+*.pdf
 .tikzgraph
 src/prova.pdf
+*.tex

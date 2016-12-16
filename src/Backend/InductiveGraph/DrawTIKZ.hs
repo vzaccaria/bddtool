@@ -103,13 +103,10 @@ drawNodes mf b expl = let
   in
     prologue ++ graph ++ epilogue pfx
 
--- drawNodesAsPdf :: BDD -> Maybe (String -> Float) -> String -> IO ()
--- drawNodesAsPdf b f n = plotTikz n $ drawNodes f b ""
 
 drawPdfInfoSheet e vs f n =
-  let exp = unE e
-      expl = printAsEquation exp
-      nexpl = expl
-      bdd = buildBDD vs exp
+  let exp   = unE e
+      expl  = printAsEquation exp
+      bdd   = buildBDD vs exp
   in
-      plotTikz n $ drawNodes f bdd nexpl
+      plotTikz n $ drawNodes f bdd expl

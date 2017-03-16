@@ -39,9 +39,12 @@ v2  = s2 .+ m3 .+ m4
 v5  = m1 .+ m4
 v6  = m3 .+ m6
 v9  = m1 .+ m6
+v10 = m1 .+ m7
+v11 = m1 .+ m6 .+ m7
 vl  = ["S_2", "M_3", "M_4", "M_1", "M_6"]
 vl3 = ["S_2", "M_3", "M_4"]
-vl9 = vl ++ ["M_9"] 
+vl9 = vl ++ ["M_9"]
+vl10 = ["S_2", "M_7", "M_6", "M_3", "M_4", "M_1"]
 
 plotProbAllVariables vl=
   set drawArrows True .
@@ -55,7 +58,9 @@ dir        = "/Users/zaccaria/development/stforge/polimi-casca/docs/general-idea
 
 writePdfs :: IO ()
 writePdfs = do
-  drawp vl (v2 .<> v5 .<> v6 .<> v9) (dir ++ "/tc_v2569.pdf");
-  drawp vl3 (v2 .<> m3 .<> m4) (dir ++ "/tc_v2_m34.pdf");
-  drawp vl9 (v2 .+ m9 .<> v5 .+ m9  .<> v6 .+ m9  .<> v9 .+ m9 ) (dir ++ "/tc_v2569_m9.pdf");
+  -- drawp vl (v2 .<> v5 .<> v6 .<> v9) (dir ++ "/tc_v2569.pdf");
+  -- drawp vl3 (v2 .<> m3 .<> m4) (dir ++ "/tc_v2_m34.pdf");
+  -- drawp vl9 (v2 .+ m9 .<> v5 .+ m9  .<> v6 .+ m9  .<> v9 .+ m9 ) (dir ++ "/tc_v2569_m9.pdf");
+  -- drawp vl10 (v2 .<> v5 .<> v6 .<> v10) (dir ++ "/tc_v25610.pdf");
+  drawp vl10 (v2 .<> v5 .<> v6 .<> v11) (dir ++ "/tc_v25611.pdf");
 

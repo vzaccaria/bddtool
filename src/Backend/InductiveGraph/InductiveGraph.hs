@@ -37,6 +37,8 @@ data Exp
   deriving (Show,Eq)
 
 instance Symantics E where
+  bot = E EFALSE
+  top = E ETRUE
   var = E . EVAR
   neg = E . ENEG . unE
   x .& y = E (unE x `EAND` unE y)
@@ -181,12 +183,12 @@ duplicateExists b l t e =
 edgeTransform :: (DynGraph gr) => (a -> b -> c) -> gr a b -> gr a c
 edgeTransform f = gmap (\(p,v,l,_)->(map1 (f l) p,v,l,[]))
   where
-    map1 g = map (first g)
+    map1 g = map (first g)  
 
-findRootNode :: Graph gr => gr a b -> (Node)
+findRootNode :: Graph gr => gr a b -> Node
 findRootNode b = let
     nds = nodes b
-    rts = filter (\n -> (length (inn b n) == 0)) nds
+    rts = filter (null . inn b) nds
   in
     head rts
 

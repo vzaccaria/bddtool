@@ -21,8 +21,9 @@ instance Symantics B where
         y' = unB y
     in B $ 0.5 + 0.5 * x' + 0.5 * y' - 0.5 * x' * y'
   x .+ y = B (unB x * unB y)
-  h x = (1 - unB x)/2
-
+  var _ = error "!"
+  _ .| _ = error "!"
+  _ .<> _ = error "!"
 
 
 

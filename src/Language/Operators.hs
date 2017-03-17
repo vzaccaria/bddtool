@@ -23,7 +23,6 @@ data V (a :: Nat) =
   V ()
 
 class Symantics r  where
-  h :: r (V 1) -> Double
   var :: String -> r (V 1)
   top :: r (V 1)
   bot :: r (V 1)

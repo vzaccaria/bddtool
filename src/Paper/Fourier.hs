@@ -44,7 +44,8 @@ hw x =
 asis :: B (V n) -> Double
 asis x = unB x :: Double
 
-ff [x,y,z] = (hw $ x .& y .& z) ^ 2
+ff [x,y,z] = hw (x .+ y .+ z) ^ (3 :: Int)
+-- ff [x,y,z] = hw (x .& y .& z) ^ (2 :: Int)
 ff _ = error "!"
 
 q :: [([Int],Double)]
@@ -57,22 +58,36 @@ cn n =
   intercalate ""
               (map show n)
 
+percentBlack :: Double -> String
+percentBlack v1 =
+  let
+    v1' = if v1 < 0 then -1 * v1 else v1
+    v1'' = if v1' > 1 then 1 else v1'
+  in "fill=black!" ++ show ( floor (v1'' * 100) :: Integer)
+
+box :: [Int] -> Double -> String
+box x v1 =
+  cn x ++ "[" ++ percentBlack v1 ++ ", as=" ++ show v1 ++", font=\\tiny, rectangle, draw=black!20, minimum size=0.7cm]"
+
 tikzg' l n =
-  let l0 = map fst $ filter (\x -> n == length (fst x)) l
-      l1 = map fst $ filter (\x -> (n - 1) == length (fst x)) l
+  let l0 = filter (\x -> n == length (fst x)) l
+      l1 = filter (\x -> (n - 1) == length (fst x)) l
       pairs =
-        do x <- l0
-           y <- l1
-           if (Set.fromList y) `Set.isSubsetOf` (Set.fromList x)
-              then return $ Just $ (cn x) ++ " -> " ++ (cn y) 
+        do (x, v1) <- l0
+           (y, v2) <- l1
+           if Set.fromList y `Set.isSubsetOf` Set.fromList x
+              then return $ Just $ (box x v1) ++ " -> " ++ (box y v2)
               else return Nothing
   in pairs ++
      (if n > 1
          then tikzg' l (n - 1)
          else [])
 
+tikzg :: [([Int],Double)] -> Int -> String
 tikzg l n = intercalate ", " $ catMaybes $ tikzg' l n
 
+graph x =
+  "\\begin{tikzpicture}\\graph [layered layout] {" ++
+  x ++ "};\\end{tikzpicture}"
 
-graph x = "\\begin{tikzpicture}\\graph [layered layout] {" ++ x ++ "};\\end{tikzpicture}"
 writeExample = plotTikz "example.pdf" $ graph $ tikzg q 3

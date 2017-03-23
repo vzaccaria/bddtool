@@ -1,9 +1,9 @@
 {-# LANGUAGE DataKinds #-}
-{-# LANGUAGE QuasiQuotes       #-}
+{-# LANGUAGE QuasiQuotes #-}
 
 module Paper.Fourier where
 
-import           Data.String.Interpolate
+import Data.String.Interpolate
 import Control.Monad
 import Language.Operators
 import Backend.UnitInterval.UnitInterval
@@ -67,10 +67,23 @@ percentBlack v1 =
 
 box :: [Int] -> Double -> Int -> String
 box x v1 nsen =
-  let
-    color = if (all (\q -> q < nsen) x) && (x /= []) then "red" else "black!10"
-  in
-    [i| #{cn x} [#{percentBlack v1}, as=#{show v1}, draw=#{color}, font=\\tiny, circle, thin, minimum size=0.5cm] |]
+  let color =
+        if (all (\q -> q < nsen) x) && (x /= [])
+           then "red"
+           else "black!10"
+  in [i| #{cn x} [#{percentBlack v1}, as=#{show v1}, draw=#{color}, font=\\tiny, circle, thin, minimum size=0.5cm] |]
+
+tikzg'' l n nsen =
+  let l0 = filter (\x -> n == length (fst x)) l
+      initial = [i|\\node [on chain=#{show n}] at (0, #{show (n)} * 0.5) {}; \n|]
+      node (x,v1) =
+        let color =
+              if (all (\q -> q < nsen) x) && (x /= [])
+                 then "red"
+                 else "black!10"
+        in [i|\\node [#{percentBlack v1}, draw=#{color}, font=\\tiny, rectangle, thin, minimum size=0.5cm, on chain=#{show n}] {}; \n|]
+      nodes = foldl (++) initial (map node l0)
+  in nodes ++ "\n" ++ (if n > 1 then tikzg'' l (n - 1) nsen else "")
 
 tikzg' l n nsen =
   let l0 = filter (\x -> n == length (fst x)) l
@@ -89,44 +102,53 @@ tikzg' l n nsen =
 tikzg :: [([Int],Double)] -> Int -> Int -> String
 tikzg l n nsen = intercalate ", \n" $ catMaybes $ tikzg' l n nsen
 
+chains n =
+  let
+    cs = map (\x -> "start chain=" ++ (show x)) [1..n]
+  in
+    "[" ++ intercalate ", " cs ++ ", node distance=0mm]"
+
+picture n x = 
+  "\\begin{tikzpicture}" ++ chains n ++ x ++ "\\end{tikzpicture}"
+  
 graph x =
   "\\begin{tikzpicture}\\graph [layered layout] {" ++
   x ++ "};\\end{tikzpicture}"
 
-
-  
 -- Here comes the example
-
-
-tr [s1, t1, m2, m3, m4, m5, m6, n2, n3, n4, n5, n6] =
-  let 
-    x 1 = s1 .+ m2 .+ m3 .+ m4 .+ m5 .+ m6
-    x 2 = m2
-    x 3 = m3
-    x 4 = m4
-    x 5 = m5
-
-    y 1 = t1 .+ n2 .+ n3 .+ n4 .+ n5 .+ n6
-    y 2 = n2
-    y 3 = n3
-    y 4 = n4
-    y 5 = n5
-    y 6 = n6
-    a 2 = (x 3 .& y 3) .+ (x 3 .& y 4) .+ (x 4 .& y 3) .+ (x 3 .& y 5) .+ (x 5 .& y 3)
-  in
-    hw $ a 2
+tr [s1,t1,m2,m3,m4,m5,m6,n2,n3,n4,n5,n6] =
+  let x 1 = s1 .+ m2 .+ m3 .+ m4 .+ m5 .+ m6
+      x 2 = m2
+      x 3 = m3
+      x 4 = m4
+      x 5 = m5
+      y 1 = t1 .+ n2 .+ n3 .+ n4 .+ n5 .+ n6
+      y 2 = n2
+      y 3 = n3
+      y 4 = n4
+      y 5 = n5
+      y 6 = n6
+      a 2 =
+        (x 3 .& y 3) .+ (x 3 .& y 4) .+ (x 4 .& y 3) .+ (x 3 .& y 5) .+
+        (x 5 .& y 3)
+  in hw $ a 2
 
 -- a 3 = (x 4 .& y 4) .+ (x 2 .& y 4) .+ (x 4 .& y 2) .+ (x 2 .& y 6) .+ (x 6 .& y 2)
 -- a 4 = (x 5 .& y 5) .+ (x 1 .& y 4) .+ (x 4 .& y 1) .+ (x 1 .& y 5) .+ (x 5 .& y 1)
-
 ff [x,y,z] = hw (x .+ y .+ z) ^ (3 :: Int)
 ff _ = error "!"
 
 drawFourier f nvar nsen deg =
-  let
-    t = fourier f nvar
-    d = tikzg t deg nsen
-  in
-    d
+  let t = fourier f nvar
+      d = tikzg t deg nsen
+  in d 
 
-writeExample = plotTikz "example.pdf" $ graph $ drawFourier tr 12 2 3
+drawFourier' f nvar nsen deg =
+  let t = fourier f nvar
+      d = tikzg'' t deg nsen
+  in d
+
+df f nvar nsen deg =
+  picture deg $ drawFourier' f nvar nsen deg
+
+writeExample = plotTikz "example.pdf" $ df tr 12 2 3

@@ -94,6 +94,7 @@ graph x =
   x ++ "};\\end{tikzpicture}"
 
 
+  
 -- Here comes the example
 
 
@@ -121,11 +122,11 @@ tr [s1, t1, m2, m3, m4, m5, m6, n2, n3, n4, n5, n6] =
 ff [x,y,z] = hw (x .+ y .+ z) ^ (3 :: Int)
 ff _ = error "!"
 
-drawFourier f nvar nsen =
+drawFourier f nvar nsen deg =
   let
     t = fourier f nvar
-    d = tikzg t nvar nsen
+    d = tikzg t deg nsen
   in
     d
 
-writeExample = plotTikz "example.pdf" $ graph $ drawFourier tr 12 2 
+writeExample = plotTikz "example.pdf" $ graph $ drawFourier tr 12 2 3

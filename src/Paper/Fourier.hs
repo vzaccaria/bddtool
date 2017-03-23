@@ -46,7 +46,6 @@ hw x =
 asis :: B (V n) -> Double
 asis x = unB x :: Double
 
-
 cn :: [Int] -> String
 cn [] = "E"
 cn n =

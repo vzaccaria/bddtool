@@ -26,6 +26,7 @@ executable bddtool
                        process >= 1.4.2.0,
                        interpolate, 
                        text,
-                       lens
-                       
+                       lens,
+                       diagrams
+
 

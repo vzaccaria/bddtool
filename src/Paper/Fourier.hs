@@ -87,7 +87,7 @@ tikzg' l n nsen =
          else [])
 
 tikzg :: [([Int],Double)] -> Int -> Int -> String
-tikzg l n nsen = intercalate ", " $ catMaybes $ tikzg' l n nsen
+tikzg l n nsen = intercalate ", \n" $ catMaybes $ tikzg' l n nsen
 
 graph x =
   "\\begin{tikzpicture}\\graph [layered layout] {" ++
